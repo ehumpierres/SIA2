@@ -121,7 +121,14 @@ def main():
             col1, col2, col3 = st.columns(3)
             col1.metric("Current Price", f"${info.get('currentPrice', 'N/A'):.2f}")
             col2.metric("Market Cap", f"${info.get('marketCap', 0) / 1e9:.2f}B")
-            col3.metric("P/E Ratio", f"{info.get('trailingPE', 'N/A'):.2f}")
+            
+            # Handle 'N/A' or non-numeric values for trailingPE
+            trailing_pe = info.get('trailingPE', 'N/A')
+            if isinstance(trailing_pe, (int, float)):
+                pe_display = f"{trailing_pe:.2f}"
+            else:
+                pe_display = str(trailing_pe)
+            col3.metric("P/E Ratio", pe_display)
 
             # Display price history chart with SMA and EMA
             st.subheader("Stock Price History with SMA and EMA")
