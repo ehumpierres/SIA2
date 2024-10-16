@@ -32,7 +32,7 @@ def calculate_rsi(data, window):
     
     rs = avg_gain / avg_loss
     rsi = 100 - (100 / (1 + rs))
-    return rsi
+    return rsi, rsi.iloc[-1]  # Return both the RSI series and the latest RSI value
 
 def create_price_chart(data, sma_window, ema_window):
     fig = go.Figure()
@@ -69,10 +69,11 @@ def create_price_chart(data, sma_window, ema_window):
     return fig
 
 def create_rsi_chart(data, rsi_window):
+    rsi_series, _ = calculate_rsi(data, rsi_window)
     fig = go.Figure()
     fig.add_trace(go.Scatter(
         x=data.index,
-        y=calculate_rsi(data, rsi_window),
+        y=rsi_series,
         name=f'RSI ({rsi_window})',
         line=dict(color='purple')
     ))
@@ -116,9 +117,12 @@ def main():
             hist_data, info = fetch_stock_data(symbol, start_date, end_date)
 
         if hist_data is not None and info is not None:
+            # Calculate latest RSI value
+            _, latest_rsi = calculate_rsi(hist_data, rsi_window)
+
             # Display key financial information
             st.subheader(f"Key Financial Information for {symbol}")
-            col1, col2, col3 = st.columns(3)
+            col1, col2, col3, col4 = st.columns(4)
             col1.metric("Current Price", f"${info.get('currentPrice', 'N/A'):.2f}")
             col2.metric("Market Cap", f"${info.get('marketCap', 0) / 1e9:.2f}B")
             
@@ -129,6 +133,9 @@ def main():
             else:
                 pe_display = str(trailing_pe)
             col3.metric("P/E Ratio", pe_display)
+            
+            # Display latest RSI value
+            col4.metric("Latest RSI", f"{latest_rsi:.2f}")
 
             # Display price history chart with SMA and EMA
             st.subheader("Stock Price History with SMA and EMA")
